@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-600 to-purple-700">
+    <div class="bg-white bg-opacity-10 backdrop-blur-lg p-8 rounded-2xl shadow-xl max-w-sm w-full animate-[float_3s_infinite]">
+        <h2 class="text-white text-2xl font-semibold text-center mb-4">Welcome Back</h2>
+        <input 
+            type="email" 
+            placeholder="Email" 
+            class="w-full p-3 mb-3 rounded-lg bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-transform transform focus:scale-105"
+        />
+        <input 
+            type="password" 
+            placeholder="Password" 
+            class="w-full p-3 mb-4 rounded-lg bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-transform transform focus:scale-105"
+        />
+        <button 
+            class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-transform transform hover:scale-110"
+        >
+            Login
+        </button>
+    </div>
+</body>
+</html>

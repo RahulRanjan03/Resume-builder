@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-6">Resume Builder</h1>
+        
+        <!-- Resume Form -->
+        <div class="bg-white p-6 shadow-lg rounded-lg mb-6">
+            <h2 class="text-xl font-semibold mb-4">Enter Your Details</h2>
+            <form id="resumeForm">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="name" placeholder="Full Name" class="border p-2 rounded w-full">
+                    <input type="text" id="email" placeholder="Email" class="border p-2 rounded w-full">
+                    <input type="text" id="phone" placeholder="Phone Number" class="border p-2 rounded w-full">
+                    <input type="text" id="address" placeholder="Address" class="border p-2 rounded w-full">
+                </div>
+                
+                <textarea id="summary" placeholder="Summary" class="border p-2 rounded w-full mt-4"></textarea>
+
+                <h3 class="text-lg font-semibold mt-4">Skills</h3>
+                <input type="text" id="skills" placeholder="E.g. HTML, CSS, JavaScript" class="border p-2 rounded w-full mt-2">
+                
+                <h3 class="text-lg font-semibold mt-4">Experience</h3>
+                <textarea id="experience" placeholder="Your work experience..." class="border p-2 rounded w-full mt-2"></textarea>
+
+                <h3 class="text-lg font-semibold mt-4">Education</h3>
+                <textarea id="education" placeholder="Your educational background..." class="border p-2 rounded w-full mt-2"></textarea>
+                
+                <button type="button" onclick="generateResume()" class="bg-blue-500 text-white px-4 py-2 rounded mt-4">Generate Resume</button>
+            </form>
+        </div>
+
+        <!-- Resume Preview -->
+        <div class="bg-white p-6 shadow-lg rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Your Resume</h2>
+            <div id="resumePreview" class="p-4 border border-gray-300 rounded">
+                <h2 class="text-2xl font-bold" id="previewName"></h2>
+                <p id="previewEmail"></p>
+                <p id="previewPhone"></p>
+                <p id="previewAddress"></p>
+                <hr class="my-2">
+                <h3 class="font-semibold">Summary</h3>
+                <p id="previewSummary"></p>
+                <h3 class="font-semibold mt-2">Skills</h3>
+                <p id="previewSkills"></p>
+                <h3 class="font-semibold mt-2">Experience</h3>
+                <p id="previewExperience"></p>
+                <h3 class="font-semibold mt-2">Education</h3>
+                <p id="previewEducation"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateResume() {
+            document.getElementById("previewName").innerText = document.getElementById("name").value;
+            document.getElementById("previewEmail").innerText = "📧 " + document.getElementById("email").value;
+            document.getElementById("previewPhone").innerText = "📞 " + document.getElementById("phone").value;
+            document.getElementById("previewAddress").innerText = "📍 " + document.getElementById("address").value;
+            document.getElementById("previewSummary").innerText = document.getElementById("summary").value;
+            document.getElementById("previewSkills").innerText = document.getElementById("skills").value;
+            document.getElementById("previewExperience").innerText = document.getElementById("experience").value;
+            document.getElementById("previewEducation").innerText = document.getElementById("education").value;
+        }
+    </script>
+</body>
+</html>

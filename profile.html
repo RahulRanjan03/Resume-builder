@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col min-h-screen bg-[url('bg4.jpg')] bg-cover bg-center">
+    <header class="flex justify-evenly items-center  bg-white shadow-md py-3 px-6 w-full ">
+        <div class="flex items-center">
+            <img src="logo.png" class="h-10 w-10 mr-2">
+            <a href="#" class="text-2xl font-bold ">Resume Builder</a>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="#profile" class="bg-black text-white px-4 py-2 rounded flex items-center space-x-1 hover:bg-blue-700">
+                <span>🔍</span>
+                <span>My Profile</span>
+            </a>
+            <a href="#logout" class="bg-red-500 text-white px-4 py-2 rounded flex items-center space-x-1 hover:bg-red-800">
+                <span>🚪</span>
+                <span>Logout</span>
+            </a>
+        </div>
+    </header>
+    
+    <main class="flex-grow p-3">
+        
+        <div class="bg-white p-2 rounded shadow-md w-3/4 mx-auto items-center">
+            <div class="flex justify-between p-2">
+                <h1 class="text-2xl font-bold text-gray-800">Edit Profile</h1>
+                <a href="#back" class="bg-gray-500 text-white px-4 py-2 rounded flex items-center space-x-1 hover:bg-gray-700">
+                    <span>⬅️</span>
+                    <span>Back</span>
+                </a>
+            </div>
+            <hr class="bg-black">
+        
+            <div class="flex justify-between w-full">
+                <div class="p-2 w-1/2">
+                    <label class="block">Full Name</label>
+                    <input type="text" placeholder="Full Name" class="border-2 w-full p-2 rounded">
+                </div>
+                <div class="p-2 w-1/2">
+                    <label class="block">Email</label>
+                    <input type="text" placeholder="Email@abc.com" class="border-2 w-full p-2 rounded">
+                </div>
+            </div>
+        
+            <div class="p-2">
+                <label class="block">New Password</label>
+                <input type="password" placeholder="New Password" class="border-2 w-full p-2 rounded">
+            </div>
+        
+            <div class="p-2 flex justify-end">
+                <button class="bg-blue-500 text-white rounded-lg px-4 py-2 flex items-center hover:bg-blue-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2zm-9-5h4v4h-4zm-1-6h6V6h-6z"></path>
+                    </svg>
+                    Save Resume
+                </button>
+            </div>
+        </div>
+        
+        
+    </main>
+</body>
+</html>
