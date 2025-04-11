@@ -1,14 +1,70 @@
 <?php
 require 'function.class.php';
+require '../src/database.class.php';
+
 $fn->AuthPage();
+$userId = $_SESSION['user_id'] ?? 0;
 
 $resumeId = $_GET['id'] ?? null;
 $mode = $_GET['mode'] ?? null;
-if (!$resumeId || !isset($_SESSION['resumes'][$resumeId])) {
+if (!$resumeId) {
     header("Location: myresumes.php");
     exit();
 }
-$data = $_SESSION['resumes'][$resumeId];
+
+// Fetch resume data
+$stmt = $db->prepare("SELECT * FROM resumes WHERE id = ? AND user_id = ?");
+$stmt->bind_param("ii", $resumeId, $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+$data = $result->fetch_assoc() ?: [];
+$stmt->close();
+
+if (!$data) {
+    header("Location: myresumes.php");
+    exit();
+}
+
+// Fetch related data
+$experience = $education = $skills = $projects = [];
+
+$stmt = $db->prepare("SELECT * FROM resume_experience WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$experience = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+$stmt = $db->prepare("SELECT * FROM resume_education WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$education = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+$stmt = $db->prepare("SELECT skill FROM resume_skills WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$result = $stmt->get_result();
+$skills = [];
+while ($row = $result->fetch_assoc()) {
+    $skills[] = $row['skill'];
+}
+$stmt->close();
+
+$stmt = $db->prepare("SELECT project FROM resume_projects WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$result = $stmt->get_result();
+$projects = [];
+while ($row = $result->fetch_assoc()) {
+    $projects[] = $row['project'];
+}
+$stmt->close();
+
+// Combine data
+$data['experience'] = $experience;
+$data['education'] = $education;
+$data['skills'] = $skills;
+$data['projects'] = $projects;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -72,12 +128,12 @@ $data = $_SESSION['resumes'][$resumeId];
                 <h1 class="text-4xl font-bold"><?php echo htmlspecialchars($data['full_name'] ?? ''); ?></h1>
                 <div class="text-gray-600 flex justify-between">
                     <div>
-                    <p>LinkedIn: <?php echo htmlspecialchars($data['linkedin'] ?? ''); ?></p>
-                    <p>Github: <?php echo htmlspecialchars($data['github'] ?? ''); ?></p>
+                        <p>LinkedIn: <?php echo htmlspecialchars($data['linkedin'] ?? ''); ?></p>
+                        <p>GitHub: <?php echo htmlspecialchars($data['github'] ?? ''); ?></p>
                     </div>
                     <div>
-                    <p>Email: <?php echo htmlspecialchars($data['email'] ?? ''); ?></p>
-                    <p>Mobile: <?php echo htmlspecialchars($data['mobile'] ?? ''); ?></p>
+                        <p>Email: <?php echo htmlspecialchars($data['email'] ?? ''); ?></p>
+                        <p>Mobile: <?php echo htmlspecialchars($data['mobile'] ?? ''); ?></p>
                     </div>
                 </div>
             </header>
@@ -132,8 +188,8 @@ $data = $_SESSION['resumes'][$resumeId];
                     <?php if (isset($data['education']) && is_array($data['education'])): ?>
                         <?php foreach ($data['education'] as $edu): ?>
                             <div>
-                                <p class="font-bold"><?php echo htmlspecialchars($edu['school'] ?? '') . ', ' . htmlspecialchars($edu['location'] ?? ''); ?></p>
-                                <p><?php echo htmlspecialchars($edu['degree'] ?? '') . ' | ' . htmlspecialchars($edu['grade'] ?? '') . ' | ' . htmlspecialchars($edu['years'] ?? ''); ?></p>
+                                <p class="font-bold"><?php echo htmlspecialchars($edu['school'] ?? ''); ?></p>
+                                <p><?php echo htmlspecialchars($edu['degree'] ?? '') . ' | ' . htmlspecialchars($edu['year'] ?? ''); ?></p>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>

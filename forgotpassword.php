@@ -12,7 +12,7 @@ require '../src/function.class.php';
     <link rel="icon" type="image/png" href="logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[url('https://img.freepik.com/free-photo/blue-toned-pack-paper-sheets-with-copy-space_23-2148320442.jpg?t=st=1743925575~exp=1743929175~hmac=454505f420a8086c800cc2543a06eb6272cc850da49eea362eebd824e57ba727&w=1380')] bg-cover flex items-center justify-center min-h-screen">
+<body class="bg-[url('https://img.freepik.com/free-photo/top-view-desk-concept-with-gray-background_23-2148236825.jpg?t=st=1744173605~exp=1744177205~hmac=6b5feadff806f3badd9f00daf2a0b7636b885231525a0cc137915dbabbbe4cce&w=1380')] bg-cover flex items-center justify-center min-h-screen">
     <div class="container flex flex-col items-center justify-center mx-auto p-8">
         <div class="bg-white shadow-lg p-8 w-full max-w-md rounded-lg">
             <form action="sendcode.action.php" method="post">

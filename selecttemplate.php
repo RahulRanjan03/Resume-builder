@@ -1,19 +1,36 @@
 <?php
-// src/selecttemplate.php
 require 'function.class.php';
-$fn->AuthPage();
+require '../src/database.class.php';
 
-// Get the resume ID from the URL
+
+$fn->AuthPage();
+$userId = $_SESSION['user_id'] ?? 0;
+
 $resumeId = $_GET['id'] ?? null;
-if (!$resumeId || !isset($_SESSION['resumes'][$resumeId])) {
+if (!$resumeId) {
     header("Location: myresumes.php");
     exit();
 }
 
+// Verify resume exists
+$stmt = $db->prepare("SELECT id FROM resumes WHERE id = ? AND user_id = ?");
+$stmt->bind_param("ii", $resumeId, $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+if (!$result->fetch_assoc()) {
+    header("Location: myresumes.php");
+    exit();
+}
+$stmt->close();
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['template'])) {
     $templateId = intval($_POST['template']);
-    $_SESSION['resumes'][$resumeId]['template'] = $templateId; // Store the selected template
+    $stmt = $db->prepare("UPDATE resumes SET template = ? WHERE id = ? AND user_id = ?");
+    $stmt->bind_param("iii", $templateId, $resumeId, $userId);
+    $stmt->execute();
+    $stmt->close();
+    
     header("Location: viewresume.php?id=$resumeId");
     exit();
 }
@@ -36,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['template'])) {
             <h1 class="text-2xl font-bold text-gray-800">Resume Builder</h1>
         </div>
         <div class="flex space-x-4">
-            <button class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition duration-300">Profile</button>
+            <!-- <button class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition duration-300">Profile</button> -->
             <a href="logout.actions.php" class="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition duration-300">Logout</a>
         </div>
     </nav>

@@ -1,5 +1,5 @@
 <?php
-session_start();
+// session_start();
 require '../src/database.class.php';
 require '../src/function.class.php';
 
@@ -14,7 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $post = $_POST;
 
     if (!empty($post['password'])) {
-        $password = md5($db->real_escape_string($post['password']));
+        $password = $db->real_escape_string($post['password']);
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT); // Use password_hash() instead of md5
         $email_id = $fn->getSession('email_id'); // Retrieve email from session
 
         if (!$email_id) {
@@ -32,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Update the password
-        $result = $db->query("UPDATE users1 SET password='$password' WHERE email_id='$email_id'");
+        $result = $db->query("UPDATE users1 SET password='$hashed_password' WHERE email_id='$email_id'");
         if ($result && $db->affected_rows > 0) {
             $fn->setAlert('Password changed successfully!');
             $fn->redirect('../src/login.php');

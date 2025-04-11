@@ -1,37 +1,19 @@
 <?php
-// src/myresumes.php
-// session_start();
 require 'function.class.php';
+require '../src/database.class.php';
+
 $fn->AuthPage();
 
-// Initialize resumes array if it doesn't exist
-if (!isset($_SESSION['resumes'])) {
-    $_SESSION['resumes'] = [];
-}
+// Get current user ID (assuming AuthPage sets this in session)
+$userId = $_SESSION['user_id'] ?? 0; // Adjust based on your auth system
 
-// Handle "Add New Resume" submission from the popup form
+// Handle "Add New Resume" submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_new_resume'])) {
-    $resumeName = $_POST['resume_name'] ?? 'New Resume ' . (count($_SESSION['resumes']) + 1);
-    $newResume = [
-        'full_name' => $resumeName,
-        'email' => '',
-        'mobile' => '',
-        'dob' => '',
-        'gender' => '',
-        'religion' => '',
-        'nationality' => '',
-        'marital_status' => '',
-        'hobbies' => '',
-        'languages' => '',
-        'address' => '',
-        'experience' => [],
-        'education' => [],
-        'skills' => [],
-        'projects' => [],
-        'template' => null
-    ];
-    $resumeId = count($_SESSION['resumes']) + 1;
-    $_SESSION['resumes'][$resumeId] = $newResume;
+    $resumeName = $_POST['resume_name'] ?? 'New Resume';
+    $stmt = $db->prepare("INSERT INTO resumes (user_id, full_name) VALUES (?, ?)");
+    $stmt->bind_param("is", $userId, $resumeName);
+    $stmt->execute();
+    $stmt->close();
     
     header("Location: myresumes.php");
     exit();
@@ -40,11 +22,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_new_resume'])) {
 // Handle "Delete Resume" submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_resume'])) {
     $resumeId = $_POST['resume_id'];
-    unset($_SESSION['resumes'][$resumeId]);
+    $db->begin_transaction();
+    try {
+        // Delete from related tables (only using resume_id)
+        $relatedTables = ['resume_experience', 'resume_education', 'resume_skills', 'resume_projects'];
+        foreach ($relatedTables as $table) {
+            $stmt = $db->prepare("DELETE FROM $table WHERE resume_id = ?");
+            $stmt->bind_param("i", $resumeId);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        // Delete from resumes table (using both resume_id and user_id)
+        $stmt = $db->prepare("DELETE FROM resumes WHERE id = ? AND user_id = ?");
+        $stmt->bind_param("ii", $resumeId, $userId);
+        $stmt->execute();
+        $stmt->close();
+
+        $db->commit();
+    } catch (Exception $e) {
+        $db->rollback();
+        die("Error deleting resume: " . $e->getMessage());
+    }
     
     header("Location: myresumes.php");
     exit();
 }
+
+// Fetch all resumes for the user
+$stmt = $db->prepare("SELECT * FROM resumes WHERE user_id = ?");
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+$resumes = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -64,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_resume'])) {
             <h1 class="text-2xl font-bold text-gray-800">Resume Builder</h1>
         </div>
         <div class="flex space-x-4">
-            <button class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition duration-300">Profile</button>
+            <!-- <button class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition duration-300">Profile</button> -->
             <a href="logout.actions.php" class="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition duration-300">Logout</a>
         </div>
     </nav>
@@ -75,18 +86,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_resume'])) {
             <h1 class="text-3xl font-bold text-gray-800 mb-4">Your Resumes</h1>
             <hr class="my-2 border-gray-300">
 
-            <!-- Add New Resume Button -->
             <div class="flex justify-end mb-6">
                 <button id="addResumeBtn" class="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 hover:scale-105 transition duration-300">
                     + Add New Resume
                 </button>
             </div>
 
-            <!-- Resume List -->
             <div id="resumeList" class="space-y-4">
-                <?php if (!empty($_SESSION['resumes'])): ?>
-                    <?php foreach ($_SESSION['resumes'] as $id => $resume): ?>
-                        <div class="flex justify-between items-center bg-gray-100 p-4 rounded-lg shadow-md hover:bg-gray-200 hover:translate-x-1 transition duration-300" data-id="<?php echo $id; ?>">
+                <?php if (!empty($resumes)): ?>
+                    <?php foreach ($resumes as $resume): ?>
+                        <div class="flex justify-between items-center bg-gray-100 p-4 rounded-lg shadow-md hover:bg-gray-200 hover:translate-x-1 transition duration-300" data-id="<?php echo $resume['id']; ?>">
                             <div>
                                 <h3 class="text-xl font-semibold text-gray-800"><?php echo htmlspecialchars($resume['full_name']); ?></h3>
                                 <p class="text-sm text-gray-600">
@@ -95,10 +104,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_resume'])) {
                             </div>
                             <div class="flex space-x-3">
                                 <?php if ($resume['template']): ?>
-                                    <a href="viewresume.php?id=<?php echo $id; ?>" class="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition duration-300">View</a>
+                                    <a href="viewresume.php?id=<?php echo $resume['id']; ?>" class="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition duration-300">View</a>
                                 <?php endif; ?>
-                                <a href="createresume.php?id=<?php echo $id; ?>" class="bg-yellow-500 text-white px-4 py-2 rounded-full hover:bg-yellow-600 transition duration-300">Edit</a>
-                                <button class="delete-resume bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-700 transition duration-300" data-id="<?php echo $id; ?>">Delete</button>
+                                <a href="createresume.php?id=<?php echo $resume['id']; ?>" class="bg-yellow-500 text-white px-4 py-2 rounded-full hover:bg-yellow-600 transition duration-300">Edit</a>
+                                <button class="delete-resume bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-700 transition duration-300" data-id="<?php echo $resume['id']; ?>">Delete</button>
                             </div>
                         </div>
                     <?php endforeach; ?>

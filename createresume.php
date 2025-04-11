@@ -1,46 +1,182 @@
 <?php
-// src/createresume.php
+// session_start(); 
 require 'function.class.php';
-$fn->AuthPage();
+require '../src/database.class.php';
 
-// Get the resume ID from the URL
+$fn->AuthPage();
+$userId = $_SESSION['user_id'] ?? 0;
+
+if (!$userId) {
+    $fn->setError('Please log in to create a resume.');
+    $fn->redirect('login.php');
+    exit();
+}
+
 $resumeId = $_GET['id'] ?? null;
-if (!$resumeId || !isset($_SESSION['resumes'][$resumeId])) {
+if (!$resumeId) {
     header("Location: myresumes.php");
     exit();
 }
 
-// Load existing data if available
-$data = $_SESSION['resumes'][$resumeId] ?? [];
+// Load existing data
+$stmt = $db->prepare("SELECT * FROM resumes WHERE id = ? AND user_id = ?");
+$stmt->bind_param("ii", $resumeId, $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+$data = $result->fetch_assoc() ?: [];
+$stmt->close();
+
+if (!$data) {
+    $fn->setError('Resume not found or access denied.');
+    header("Location: myresumes.php");
+    exit();
+}
+
+// Load related data
+$experience = $education = $skills = $projects = [];
+$stmt = $db->prepare("SELECT * FROM resume_experience WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$experience = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+$stmt = $db->prepare("SELECT * FROM resume_education WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$education = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+$stmt = $db->prepare("SELECT skill FROM resume_skills WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$result = $stmt->get_result();
+$skills = [];
+while ($row = $result->fetch_assoc()) {
+    $skills[] = $row['skill'];
+}
+$stmt->close();
+
+// Modified to include project description
+$stmt = $db->prepare("SELECT project, description FROM resume_projects WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$result = $stmt->get_result();
+$projects = [];
+while ($row = $result->fetch_assoc()) {
+    $projects[] = $row;
+}
+$stmt->close();
+
+$data['experience'] = $experience;
+$data['education'] = $education;
+$data['skills'] = $skills;
+$data['projects'] = $projects;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_resume'])) {
-    // Save form data to the specific resume in the session
-    $_SESSION['resumes'][$resumeId] = [
-        'full_name' => $_POST['full_name'] ?? $data['full_name'],
-        'email' => $_POST['email'] ?? $data['email'],
-        'mobile' => $_POST['mobile'] ?? $data['mobile'],
-        'dob' => $_POST['dob'] ?? $data['dob'],
-        'gender' => $_POST['gender'] ?? $data['gender'],
-        'religion' => $_POST['religion'] ?? $data['religion'],
-        'nationality' => $_POST['nationality'] ?? $data['nationality'],
-        'marital_status' => $_POST['marital_status'] ?? $data['marital_status'],
-        'hobbies' => $_POST['hobbies'] ?? $data['hobbies'],
-        'languages' => $_POST['languages'] ?? $data['languages'],
-        'address' => $_POST['address'] ?? $data['address'],
-        'linkedin' => $_POST['linkedin'] ?? $data['linkedin'],
-        'github' => $_POST['github'] ?? $data['github'],
-        'experience' => array_map(function($title, $company, $years) {
-            return ['title' => $title, 'company' => $company, 'years' => $years];
-        }, $_POST['job_title'] ?? [], $_POST['company_name'] ?? [], $_POST['years'] ?? []),
-        'education' => array_map(function($degree, $school, $year) {
-            return ['degree' => $degree, 'school' => $school, 'year' => $year];
-        }, $_POST['degree'] ?? [], $_POST['school_name'] ?? [], $_POST['year_graduated'] ?? []),
-        'skills' => $_POST['skills'] ?? $data['skills'] ?? [],
-        'projects' => $_POST['projects'] ?? $data['projects'] ?? [],
-        'template' => $data['template'] ?? null
-    ];
-    header("Location: selecttemplate.php?id=$resumeId");
-    exit();
+    $db->begin_transaction();
+    try {
+        // Assign POST values to variables
+        $full_name = $_POST['full_name'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $mobile = $_POST['mobile'] ?? '';
+        $dob = $_POST['dob'] ?? null;
+        $gender = $_POST['gender'] ?? '';
+        $religion = $_POST['religion'] ?? '';
+        $nationality = $_POST['nationality'] ?? '';
+        $marital_status = $_POST['marital_status'] ?? '';
+        $hobbies = $_POST['hobbies'] ?? '';
+        $languages = $_POST['languages'] ?? '';
+        $address = $_POST['address'] ?? '';
+        $linkedin = $_POST['linkedin'] ?? '';
+        $github = $_POST['github'] ?? '';
+
+        $stmt = $db->prepare("UPDATE resumes SET 
+            full_name = ?, email = ?, mobile = ?, dob = ?, gender = ?,
+            religion = ?, nationality = ?, marital_status = ?, hobbies = ?,
+            languages = ?, address = ?, linkedin = ?, github = ?
+            WHERE id = ? AND user_id = ?");
+        $stmt->bind_param("sssssssssssssii",
+            $full_name, $email, $mobile, $dob, $gender,
+            $religion, $nationality, $marital_status, $hobbies,
+            $languages, $address, $linkedin, $github,
+            $resumeId, $userId
+        );
+        $stmt->execute();
+        $stmt->close();
+
+        // Delete existing related records
+        $tables = ['resume_experience', 'resume_education', 'resume_skills', 'resume_projects'];
+        foreach ($tables as $table) {
+            $stmt = $db->prepare("DELETE FROM $table WHERE resume_id = ?");
+            $stmt->bind_param("i", $resumeId);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        // Save experience
+        if (!empty($_POST['job_title'])) {
+            $stmt = $db->prepare("INSERT INTO resume_experience (resume_id, title, company, years) VALUES (?, ?, ?, ?)");
+            foreach ($_POST['job_title'] as $i => $title) {
+                if (!empty($title) && !empty($_POST['company_name'][$i]) && !empty($_POST['years'][$i])) {
+                    $company = $_POST['company_name'][$i];
+                    $years = $_POST['years'][$i];
+                    $stmt->bind_param("isss", $resumeId, $title, $company, $years);
+                    $stmt->execute();
+                }
+            }
+            $stmt->close();
+        }
+
+        // Save education
+        if (!empty($_POST['degree'])) {
+            $stmt = $db->prepare("INSERT INTO resume_education (resume_id, degree, school, year) VALUES (?, ?, ?, ?)");
+            foreach ($_POST['degree'] as $i => $degree) {
+                if (!empty($degree) && !empty($_POST['school_name'][$i]) && !empty($_POST['year_graduated'][$i])) {
+                    $school = $_POST['school_name'][$i];
+                    $year = $_POST['year_graduated'][$i];
+                    $stmt->bind_param("isss", $resumeId, $degree, $school, $year);
+                    $stmt->execute();
+                }
+            }
+            $stmt->close();
+        }
+
+        // Save skills
+        if (!empty($_POST['skills'])) {
+            $stmt = $db->prepare("INSERT INTO resume_skills (resume_id, skill) VALUES (?, ?)");
+            foreach ($_POST['skills'] as $skill) {
+                if (!empty($skill)) {
+                    $stmt->bind_param("is", $resumeId, $skill);
+                    $stmt->execute();
+                }
+            }
+            $stmt->close();
+        }
+
+        // Save projects with description
+        if (!empty($_POST['projects'])) {
+            $stmt = $db->prepare("INSERT INTO resume_projects (resume_id, project, description) VALUES (?, ?, ?)");
+            foreach ($_POST['projects'] as $i => $project) {
+                if (!empty($project) && !empty($_POST['project_description'][$i])) {
+                    $description = $_POST['project_description'][$i];
+                    $stmt->bind_param("iss", $resumeId, $project, $description);
+                    $stmt->execute();
+                }
+            }
+            $stmt->close();
+        }
+
+        $db->commit();
+        $fn->setAlert('Resume saved successfully!');
+        header("Location: selecttemplate.php?id=$resumeId&user_id=$userId");
+        exit();
+    } catch (Exception $e) {
+        $db->rollback();
+        error_log("Error saving resume: " . $e->getMessage());
+        $fn->setError('Error saving resume: ' . $e->getMessage());
+        header("Location: myresumes.php");
+        exit();
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -61,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_resume'])) {
             <h1 class="text-2xl font-bold text-gray-800">Resume Builder</h1>
         </div>
         <div class="flex space-x-4">
-            <button class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition duration-300">Profile</button>
+            <!-- <button class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition duration-300">Profile</button> -->
             <a href="logout.actions.php" class="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition duration-300">Logout</a>
         </div>
     </nav>
@@ -190,12 +326,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_resume'])) {
                     <?php if (!empty($data['projects'])): ?>
                         <?php foreach ($data['projects'] as $project): ?>
                             <div class="grid grid-cols-1 gap-4">
-                                <input type="text" name="projects[]" value="<?php echo htmlspecialchars($project ?? ''); ?>" class="border-2 border-gray-300 p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your project...">
+                                <input type="text" name="projects[]" value="<?php echo htmlspecialchars($project['project'] ?? ''); ?>" class="border-2 border-gray-300 p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your project name...">
+                                <textarea name="project_description[]" rows="3" class="border-2 border-gray-300 p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter project description..."><?php echo htmlspecialchars($project['description'] ?? ''); ?></textarea>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <div class="grid grid-cols-1 gap-4">
-                            <input type="text" name="projects[]" class="border-2 border-gray-300 p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your project...">
+                            <input type="text" name="projects[]" class="border-2 border-gray-300 p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your project name...">
+                            <textarea name="project_description[]" rows="3" class="border-2 border-gray-300 p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter project description..."></textarea>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -283,7 +421,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_resume'])) {
             const newProject = document.createElement('div');
             newProject.classList.add('grid', 'grid-cols-1', 'gap-4');
             newProject.innerHTML = `
-                <input type="text" name="projects[]" class="border-2 border-gray-300 p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your project...">
+                <input type="text" name="projects[]" class="border-2 border-gray-300 p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your project name...">
+                <textarea name="project_description[]" rows="3" class="border-2 border-gray-300 p-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter project description..."></textarea>
             `;
             container.appendChild(newProject);
         });

@@ -1,14 +1,70 @@
 <?php
 require 'function.class.php';
+require '../src/database.class.php';
+
 $fn->AuthPage();
+$userId = $_SESSION['user_id'] ?? 0;
 
 $resumeId = $_GET['id'] ?? null;
 $mode = $_GET['mode'] ?? null;
-if (!$resumeId || !isset($_SESSION['resumes'][$resumeId])) {
+if (!$resumeId) {
     header("Location: myresumes.php");
     exit();
 }
-$data = $_SESSION['resumes'][$resumeId];
+
+// Fetch resume data
+$stmt = $db->prepare("SELECT * FROM resumes WHERE id = ? AND user_id = ?");
+$stmt->bind_param("ii", $resumeId, $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+$data = $result->fetch_assoc() ?: [];
+$stmt->close();
+
+if (!$data) {
+    header("Location: myresumes.php");
+    exit();
+}
+
+// Fetch related data
+$experience = $education = $skills = $projects = [];
+
+$stmt = $db->prepare("SELECT * FROM resume_experience WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$experience = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+$stmt = $db->prepare("SELECT * FROM resume_education WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$education = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+$stmt = $db->prepare("SELECT skill FROM resume_skills WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$result = $stmt->get_result();
+$skills = [];
+while ($row = $result->fetch_assoc()) {
+    $skills[] = $row['skill'];
+}
+$stmt->close();
+
+$stmt = $db->prepare("SELECT project FROM resume_projects WHERE resume_id = ?");
+$stmt->bind_param("i", $resumeId);
+$stmt->execute();
+$result = $stmt->get_result();
+$projects = [];
+while ($row = $result->fetch_assoc()) {
+    $projects[] = $row['project'];
+}
+$stmt->close();
+
+// Combine data
+$data['experience'] = $experience;
+$data['education'] = $education;
+$data['skills'] = $skills;
+$data['projects'] = $projects;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -75,12 +131,12 @@ $data = $_SESSION['resumes'][$resumeId];
                 <p class="text-gray-600">LinkedIn: <?php echo htmlspecialchars($data['linkedin'] ?? ''); ?> | GitHub: <?php echo htmlspecialchars($data['github'] ?? ''); ?></p>
             </div>
             <div class="mt-6">
-                <div class="mb-4">
+                <!-- <div class="mb-4">
                     <h2 class="text-green-600 font-bold uppercase">Objective</h2>
                     <p class="text-gray-700 border-l-4 border-green-500 pl-4">
                         <?php echo htmlspecialchars($data['objective'] ?? 'Creative and detail-oriented professional with experience in ' . ($data['experience'][0]['title'] ?? 'floral design') . '. Seeking to leverage expertise and skills to excel in the field.'); ?>
                     </p>
-                </div>
+                </div> -->
                 <div class="mb-4">
                     <h2 class="text-green-600 font-bold uppercase">Skills & Abilities</h2>
                     <p class="text-gray-700 border-l-4 border-green-500 pl-4">

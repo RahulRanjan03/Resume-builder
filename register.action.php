@@ -9,41 +9,49 @@ ini_set('display_errors', 1);
 if (!isset($fn)) {
     die("Error: Function class is not loaded.");
 }
+if (!isset($db) || !$db) {
+    die("Error: Database connection failed.");
+}
 
-if ($_POST) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $post = $_POST;
 
     if (!empty($post['full_name']) && !empty($post['email_id']) && !empty($post['password'])) {
         $full_name = $db->real_escape_string($post['full_name']);
         $email_id = $db->real_escape_string($post['email_id']);
-        $password = md5($db->real_escape_string($post['password']));
+        $password = password_hash($post['password'], PASSWORD_DEFAULT); // Secure hashing
 
-        $result = $db->query("SELECT COUNT(*) as user FROM users1 WHERE (email_id='$email_id' && password='$password')");
+        // Check if email already exists
+        $stmt = $db->prepare("SELECT COUNT(*) as user FROM users1 WHERE email_id = ?");
+        $stmt->bind_param("s", $email_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
         $row = $result->fetch_assoc();
+        $stmt->close();
 
         if ($row['user'] > 0) {
-            $fn->setError($email_id.' is already registered !.');
+            $fn->setError($email_id . ' is already registered!');
             $fn->redirect('../src/register.php');
-            die();
+            exit();
         }
 
-        try {
-            $db->query("INSERT INTO users1 (full_name, email_id, password) VALUES ('$full_name', '$email_id', '$password')");
+        // Insert new user
+        $stmt = $db->prepare("INSERT INTO users1 (full_name, email_id, password) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $full_name, $email_id, $password);
+        if ($stmt->execute()) {
             $fn->setAlert('You registered successfully!');
             $fn->redirect('../src/login.php');
-            // exit();  
-        } catch (Exception $error) {
-            $fn->setError("Database error: " . $error->getMessage());
+        } else {
+            $fn->setError("Database error: " . $db->error);
             $fn->redirect('../src/register.php');
-            // exit();
         }
+        $stmt->close();
     } else {
         $fn->setError('Please fill in all fields.');
         $fn->redirect('../src/register.php');
-        exit();
     }
 } else {
     $fn->redirect('../src/register.php');
-    exit();
 }
+exit();
 ?>

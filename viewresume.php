@@ -1,24 +1,32 @@
 <?php
-// src/viewresume.php
 require 'function.class.php';
+require '../src/database.class.php';
+
+
 $fn->AuthPage();
+$userId = $_SESSION['user_id'] ?? 0;
 
 $resumeId = $_GET['id'] ?? null;
-if (!$resumeId || !isset($_SESSION['resumes'][$resumeId])) {
+if (!$resumeId) {
     header("Location: myresumes.php");
     exit();
 }
 
-$resume = $_SESSION['resumes'][$resumeId];
-$template = $resume['template'] ?? null;
+// Fetch resume data
+$stmt = $db->prepare("SELECT template FROM resumes WHERE id = ? AND user_id = ?");
+$stmt->bind_param("ii", $resumeId, $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+$resume = $result->fetch_assoc();
+$stmt->close();
 
-if (!$template) {
+if (!$resume || !$resume['template']) {
     header("Location: myresumes.php");
     exit();
 }
 
-// Redirect to the appropriate resume template page with view mode
-switch ($template) {
+// Redirect to the appropriate resume template page
+switch ($resume['template']) {
     case 1:
         header("Location: resume1.php?id=$resumeId&mode=view");
         break;
