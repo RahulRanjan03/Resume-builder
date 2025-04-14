@@ -2,7 +2,6 @@
 require 'function.class.php';
 require '../src/database.class.php';
 
-
 $fn->AuthPage();
 $userId = $_SESSION['user_id'] ?? 0;
 
@@ -44,8 +43,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['template'])) {
     <link rel="icon" type="image/png" href="logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .animated-background {
+            background: linear-gradient(135deg, #4b6cb7, #182848);
+            background-size: 200% 200%;
+            animation: gradientShift 10s ease infinite;
+            position: relative;
+            min-height: 100vh;
+            overflow: hidden; /* Prevent overflow from shapes */
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            filter: blur(10px);
+        }
+        .shape-1 { width: 400px; height: 400px; top: 0; left: 0; } /* Adjusted to start within viewport */
+        .shape-2 { width: 300px; height: 300px; bottom: 0; right: 0; } /* Adjusted to start within viewport */
+        .shape-3 { width: 250px; height: 250px; top: 50%; left: 20%; } /* Kept relative positioning */
+    </style>
 </head>
-<body class="bg-[url('https://img.freepik.com/free-photo/blue-toned-pack-paper-sheets-with-copy-space_23-2148320442.jpg?t=st=1743925575~exp=1743929175~hmac=454505f420a8086c800cc2543a06eb6272cc850da49eea362eebd824e57ba727&w=1380')] bg-cover font-['Poppins'] min-h-screen">
+<body class="animated-background font-['Poppins'] min-h-screen">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
     <!-- Navbar -->
     <nav class="bg-white bg-opacity-95 h-16 px-6 py-4 flex justify-between items-center shadow-xl sticky top-0 z-10">
         <div class="flex items-center space-x-3">
@@ -62,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['template'])) {
     <div class="container mx-auto mt-10 px-4">
         <h1 class="text-3xl font-bold text-gray-800 text-center mb-8">Choose Your Resume Template</h1>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto overflow-hidden">
             <!-- Template 1 -->
             <form method="POST" action="">
                 <div class="bg-white bg-opacity-90 shadow-2xl rounded-xl p-4 w-full max-w-xs mx-auto hover:shadow-lg hover:-translate-y-1 transition duration-300">

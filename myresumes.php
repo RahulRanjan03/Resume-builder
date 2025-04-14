@@ -66,13 +66,40 @@ $stmt->close();
     <link rel="icon" type="image/png" href="logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .animated-background {
+            background: linear-gradient(135deg, #4b6cb7, #182848);
+            background-size: 200% 200%;
+            animation: gradientShift 10s ease infinite;
+            position: relative;
+            /* overflow: hidden; */
+            min-height: 100vh;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            filter: blur(10px);
+        }
+        .shape-1 { width: 400px; height: 400px; top: 0; left: 0; } /* Adjusted to start within viewport */
+        .shape-2 { width: 300px; height: 300px; bottom: 0; right: 0; } /* Adjusted to start within viewport */
+        .shape-3 { width: 250px; height: 250px; top: 50%; left: 20%; }
+    </style>
 </head>
-<body class="bg-[url('https://img.freepik.com/free-photo/blue-toned-pack-paper-sheets-with-copy-space_23-2148320442.jpg?t=st=1743925575~exp=1743929175~hmac=454505f420a8086c800cc2543a06eb6272cc850da49eea362eebd824e57ba727&w=1380')] bg-cover font-['Poppins'] min-h-screen">
+<body class="animated-background  min-h-screen">
+<div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
     <!-- Navbar -->
     <nav class="bg-white bg-opacity-95 h-16 px-6 py-4 flex justify-between items-center shadow-xl sticky top-0 z-10">
         <div class="flex items-center space-x-3">
             <img src="logo.png" class="h-8 w-8" alt="Logo">
-            <h1 class="text-2xl font-bold text-gray-800">Resume Builder</h1>
+            <h1 class="text-2xl font-bold  text-gray-800">Resume Builder</h1>
         </div>
         <div class="flex space-x-4">
             <!-- <button class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition duration-300">Profile</button> -->
