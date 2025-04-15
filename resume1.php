@@ -141,6 +141,12 @@ $data['achievements'] = $achievements;
             overflow: hidden;
         }
     }
+    .no-break {
+    page-break-inside: avoid;
+}
+.section-break {
+    page-break-before: always;
+}
     .animated-background {
         background: linear-gradient(135deg, #4b6cb7, #182848);
         background-size: 200% 200%;
@@ -410,28 +416,73 @@ $data['achievements'] = $achievements;
         window.print();
     });
 
-    downloadBtn.addEventListener('click', function() {
+    downloadBtn.addEventListener('click', function () {
     adjustContentToFit();
+    
+    // Clone the resume content
     const element = resumeContent.cloneNode(true);
+    
+    // Apply consistent styling for PDF
     const fontFamily = fontSelect.value || 'Roboto';
     element.style.fontFamily = fontFamily;
     element.style.width = '190mm';
-    element.style.height = 'auto';
+    element.style.height = 'auto'; // Allow height to adjust dynamically
     element.style.margin = '0';
     element.style.backgroundColor = 'white';
-    // element.style.padding = '10mm';
+    element.style.padding = '5mm';
     element.style.boxSizing = 'border-box';
     element.style.display = 'block';
     element.style.boxShadow = 'none';
     element.classList.remove('shadow-lg');
 
-    // Warn if content may exceed two pages
-    const maxHeightPxTwoPages = 2 * 277 * 3.78; // Two A4 pages (277mm usable height each)
+    // Function to generate PDF
+    function generatePdf() {
+        const opt = {
+            margin: [5, 5, 5, 5], // Consistent margins for better appearance
+            filename: 'resume.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true,
+                logging: false // Disable logging for cleaner console
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4', 
+                orientation: 'portrait' 
+            },
+            pagebreak: { 
+                mode: ['avoid-all', 'css', 'legacy'], // Respect CSS page-break rules
+                before: '.page-break-before', // Optional: Add class for manual breaks
+                after: '.page-break-after' 
+            }
+        };
+
+        // Generate and save PDF
+        html2pdf()
+            .set(opt)
+            .from(element)
+            .toPdf()
+            .get('pdf')
+            .then((pdf) => {
+                // Ensure content fits by allowing multiple pages
+                const totalPages = pdf.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    pdf.setPage(i);
+                    // Optional: Add page numbers or headers if desired
+                    // pdf.text(`Page ${i} of ${totalPages}`, 10, 10);
+                }
+            })
+            .save();
+    }
+
+    // Check content height and warn if unusually large (optional)
     const contentHeightPx = element.offsetHeight;
-    if (contentHeightPx > maxHeightPxTwoPages) {
+    const maxHeightPxSinglePage = 277 * 3.78; // Approx height of one A4 page in pixels
+    if (contentHeightPx > maxHeightPxSinglePage * 4) { // Arbitrary limit (e.g., 4 pages)
         Swal.fire({
             title: 'Warning',
-            text: 'Content may be too long for two pages. Some details might be cut off. Consider editing to fit.',
+            text: 'Content is unusually long and may result in many pages. Consider editing for brevity.',
             icon: 'warning',
             confirmButtonText: 'Proceed',
             showCancelButton: true,
@@ -443,17 +494,6 @@ $data['achievements'] = $achievements;
         });
     } else {
         generatePdf();
-    }
-
-    function generatePdf() {
-        const opt = {
-            margin: [0, 0, 10, 0],
-            filename: 'resume.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().set(opt).from(element).save();
     }
 });
 

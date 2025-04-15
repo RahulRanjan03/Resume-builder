@@ -39,6 +39,18 @@ switch ($resume['template']) {
     case 4:
         header("Location: resume4.php?id=$resumeId&mode=view");
         break;
+        case 5:
+            header("Location: resume5.php?id=$resumeId&mode=view");
+            break;
+        case 6:
+            header("Location: resume6.php?id=$resumeId&mode=view");
+            break;
+        case 7:
+            header("Location: resume7.php?id=$resumeId&mode=view");
+            break;
+        case 8:
+            header("Location: resume8.php?id=$resumeId&mode=view");
+            break;
     default:
         header("Location: myresumes.php");
         break;

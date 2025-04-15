@@ -2,6 +2,7 @@
 require 'function.class.php';
 require '../src/database.class.php';
 
+// [Your existing PHP logic from template1.php, unchanged]
 $fn->AuthPage();
 $userId = $_SESSION['user_id'] ?? 0;
 
@@ -105,7 +106,7 @@ $data['achievements'] = $achievements;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume Template 4 | Resume Builder</title>
+    <title>Resume Template 5 | Resume Builder</title>
     <link rel="icon" type="image/png" href="logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -118,28 +119,27 @@ $data['achievements'] = $achievements;
             max-height: 360mm;
             box-sizing: border-box;
             overflow: hidden;
-            font-size: 17px;
-            padding: 12mm;
+            font-size: 15px;
+            padding: 20mm;
+            font-family: 'Lora', serif;
         }
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            #resumeContent, #resumeContent * {
-                visibility: visible;
-            }
+            body * { visibility: hidden; }
+            #resumeContent, #resumeContent * { visibility: visible; }
             #resumeContent {
                 position: absolute;
                 top: 0;
                 left: 0;
                 width: 240mm;
                 max-height: 360mm;
-                padding: 12mm;
+                padding: 20mm;
                 box-shadow: none;
                 border: none;
                 overflow: hidden;
             }
         }
+        .no-break { page-break-inside: avoid; }
+        .section-break { page-break-before: always; }
         .animated-background {
             background: linear-gradient(135deg, #4b6cb7, #182848);
             background-size: 200% 200%;
@@ -158,19 +158,13 @@ $data['achievements'] = $achievements;
             border-radius: 50%;
             filter: blur(10px);
         }
-        .no-break {
-    page-break-inside: avoid;
-}
-.section-break {
-    page-break-before: always;
-}
         .shape-1 { width: 400px; height: 400px; top: 0; left: 0; }
         .shape-2 { width: 300px; height: 300px; bottom: 0; right: 0; }
         .shape-3 { width: 250px; height: 250px; top: 50%; left: 20%; }
-        h1 { font-size: 3.5rem; font-weight: bold; line-height: 1.2; }
-        h2 { font-size: 1.75rem; line-height: 1.3; }
-        p, li { line-height: 1.6; margin-bottom: 0.4rem; }
-        section { margin-top: 1.5rem; }
+        h1 { font-size: 2.5rem; font-weight: bold; line-height: 1.2; }
+        h2 { font-size: 1.5rem; font-weight: bold; line-height: 1.3; color: #333; }
+        p, li { line-height: 1.8; margin-bottom: 0.8rem; }
+        section { margin-top: 2rem; }
     </style>
 </head>
 <body class="animated-background flex justify-center py-10">
@@ -199,83 +193,90 @@ $data['achievements'] = $achievements;
             </div>
         <?php endif; ?>
         <div id="resumeContent" class="bg-white shadow-lg">
-            <header class="text-center border-b pb-2">
+            <header class="text-center pb-6 no-break">
                 <?php if (!empty($data['full_name'])): ?>
-                    <h1 class="text-xl"><strong><?php echo htmlspecialchars($data['full_name']); ?></strong></h1>
+                    <h1 class="text-3xl font-bold"><?php echo htmlspecialchars($data['full_name']); ?></h1>
                 <?php endif; ?>
                 <?php if (!empty($data['experience'][0]['title'])): ?>
-                    <p class="text-sm text-gray-600"><?php echo htmlspecialchars($data['experience'][0]['title']); ?></p>
+                    <p class="text-md text-gray-600"><?php echo htmlspecialchars($data['experience'][0]['title']); ?></p>
                 <?php endif; ?>
-                <?php if (!empty($data['linkedin']) || !empty($data['github'])): ?>
-                    <div class="mt-1 text-gray-600 ">
-                        <?php if (!empty($data['linkedin'])): ?>
-                            <p>LinkedIn: <?php echo htmlspecialchars($data['linkedin']); ?></p>
-                        <?php endif; ?>
-                        <?php if (!empty($data['github'])): ?>
-                            <p>GitHub: <?php echo htmlspecialchars($data['github']); ?></p>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
+                <div class="mt-3 text-gray-600 text-sm">
+                    <?php if (!empty($data['email'])): ?>
+                        <span><?php echo htmlspecialchars($data['email']); ?> | </span>
+                    <?php endif; ?>
+                    <?php if (!empty($data['mobile'])): ?>
+                        <span><?php echo htmlspecialchars($data['mobile']); ?> | </span>
+                    <?php endif; ?>
+                    <?php if (!empty($data['linkedin'])): ?>
+                        <span><?php echo htmlspecialchars($data['linkedin']); ?></span>
+                    <?php endif; ?>
+                </div>
             </header>
-            <?php if (!empty($data['email']) || !empty($data['mobile']) || !empty($data['nationality']) || !empty($data['marital_status']) || !empty($data['languages']) || !empty($data['hobbies'])): ?>
-                <section>
-                    <h2 class="border-b pb-1">Personal Information</h2>
-                    <div class="mt-1 ">
-                        <?php if (!empty($data['email'])): ?>
-                            <p><strong>Email:</strong> <?php echo htmlspecialchars($data['email']); ?></p>
-                        <?php endif; ?>
-                        <?php if (!empty($data['mobile'])): ?>
-                            <p><strong>Phone:</strong> <?php echo htmlspecialchars($data['mobile']); ?></p>
+            <?php if (!empty($data['address']) || !empty($data['nationality']) || !empty($data['languages'])): ?>
+                <section class="no-break">
+                    <h2 class="border-b pb-1">Profile</h2>
+                    <div class="mt-3">
+                        <?php if (!empty($data['address'])): ?>
+                            <p><?php echo htmlspecialchars($data['address']); ?></p>
                         <?php endif; ?>
                         <?php if (!empty($data['nationality'])): ?>
-                            <p><strong>Nationality:</strong> <?php echo htmlspecialchars($data['nationality']); ?></p>
-                        <?php endif; ?>
-                        <?php if (!empty($data['marital_status'])): ?>
-                            <p><strong>Marital Status:</strong> <?php echo htmlspecialchars($data['marital_status']); ?></p>
+                            <p><?php echo htmlspecialchars($data['nationality']); ?></p>
                         <?php endif; ?>
                         <?php if (!empty($data['languages'])): ?>
-                            <p><strong>Languages Known:</strong> <?php echo htmlspecialchars($data['languages']); ?></p>
-                        <?php endif; ?>
-                        <?php if (!empty($data['hobbies'])): ?>
-                            <p><strong>Hobbies:</strong> <?php echo htmlspecialchars($data['hobbies']); ?></p>
+                            <p><?php echo htmlspecialchars($data['languages']); ?></p>
                         <?php endif; ?>
                     </div>
-                </section>
-            <?php endif; ?>
-            <?php if (!empty($data['address'])): ?>
-                <section>
-                    <h2 class="border-b pb-1">Address</h2>
-                    <p class="mt-1 "><?php echo htmlspecialchars($data['address']); ?></p>
                 </section>
             <?php endif; ?>
             <?php if (!empty($data['experience'])): ?>
-                <section>
+                <section class="no-break">
                     <h2 class="border-b pb-1">Experience</h2>
-                    <div class="mt-1 space-y-1 " data-section="experience">
+                    <div class="mt-3 space-y-4">
                         <?php foreach ($data['experience'] as $exp): ?>
                             <?php if (!empty($exp['title']) || !empty($exp['company']) || !empty($exp['years'])): ?>
                                 <div>
-                                    <p>
-                                        <?php if (!empty($exp['title'])): ?>
-                                            <strong><?php echo htmlspecialchars($exp['title']); ?></strong>
-                                        <?php endif; ?>
-                                        <?php if (!empty($exp['company'])): ?>
-                                            - <?php echo htmlspecialchars($exp['company']); ?>
-                                        <?php endif; ?>
-                                    </p>
-                                    <?php if (!empty($exp['years'])): ?>
-                                        <p class="text-gray-600"><?php echo htmlspecialchars($exp['years']); ?></p>
-                                    <?php endif; ?>
+                                    <p class="font-bold"><?php echo htmlspecialchars($exp['title']); ?> - <?php echo htmlspecialchars($exp['company']); ?></p>
+                                    <p class="text-gray-600"><?php echo htmlspecialchars($exp['years']); ?></p>
                                 </div>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
                 </section>
             <?php endif; ?>
+            <?php if (!empty($data['education'])): ?>
+                <section class="no-break">
+                    <h2 class="border-b pb-1">Education</h2>
+                    <div class="mt-3 space-y-4">
+                        <?php foreach ($data['education'] as $edu): ?>
+                            <?php if (!empty($edu['degree']) || !empty($edu['school']) || !empty($edu['year'])): ?>
+                                <div>
+                                    <p class="font-bold"><?php echo htmlspecialchars($edu['degree']); ?> - <?php echo htmlspecialchars($edu['school']); ?></p>
+                                    <p class="text-gray-600"><?php echo htmlspecialchars($edu['year']); ?></p>
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+            <?php endif; ?>
+            <?php if (!empty($data['skills'])): ?>
+                <section class="no-break">
+                    <h2 class="border-b pb-1">Skills</h2>
+                    <ul class="mt-3 list-none" data-section="skills">
+                        <?php foreach ($data['skills'] as $skill): ?>
+                            <?php if (!empty($skill)): ?>
+                                <li><?php echo htmlspecialchars($skill); ?></li>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <?php if ($total_skills > 5): ?>
+                            <li class="text-gray-500">... and <?php echo $total_skills - 5; ?> more</li>
+                        <?php endif; ?>
+                    </ul>
+                </section>
+            <?php endif; ?>
             <?php if (!empty($data['projects'])): ?>
-                <section>
+                <section class="no-break">
                     <h2 class="border-b pb-1">Projects</h2>
-                    <div class="mt-1 space-y-1 " data-section="projects">
+                    <div class="mt-3 space-y-2" data-section="projects">
                         <?php foreach ($data['projects'] as $project): ?>
                             <?php if (!empty($project)): ?>
                                 <p><?php echo htmlspecialchars($project); ?></p>
@@ -288,14 +289,14 @@ $data['achievements'] = $achievements;
                 </section>
             <?php endif; ?>
             <?php if (!empty($data['certificates'])): ?>
-                <section>
+                <section class="no-break">
                     <h2 class="border-b pb-1">Certificates</h2>
-                    <div class="mt-1 space-y-1 " data-section="certificates">
+                    <div class="mt-3 space-y-2" data-section="certificates">
                         <?php foreach ($data['certificates'] as $certificate): ?>
                             <?php if (!empty($certificate)): ?>
                                 <p><?php echo htmlspecialchars($certificate); ?></p>
                             <?php endif; ?>
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
                         <?php if ($total_certificates > 3): ?>
                             <p class="text-gray-500">... and <?php echo $total_certificates - 3; ?> more</p>
                         <?php endif; ?>
@@ -303,9 +304,9 @@ $data['achievements'] = $achievements;
                 </section>
             <?php endif; ?>
             <?php if (!empty($data['achievements'])): ?>
-                <section>
+                <section class="no-break">
                     <h2 class="border-b pb-1">Achievements</h2>
-                    <div class="mt-1 space-y-1" data-section="achievements">
+                    <div class="mt-3 space-y-2" data-section="achievements">
                         <?php foreach ($data['achievements'] as $achievement): ?>
                             <?php if (!empty($achievement)): ?>
                                 <p><?php echo htmlspecialchars($achievement); ?></p>
@@ -317,50 +318,12 @@ $data['achievements'] = $achievements;
                     </div>
                 </section>
             <?php endif; ?>
-            <?php if (!empty($data['education'])): ?>
-                <section>
-                    <h2 class="border-b pb-1">Education</h2>
-                    <div class="mt-1 space-y-1 " data-section="education">
-                        <?php foreach ($data['education'] as $edu): ?>
-                            <?php if (!empty($edu['degree']) || !empty($edu['school']) || !empty($edu['year'])): ?>
-                                <div>
-                                    <p>
-                                        <?php if (!empty($edu['degree'])): ?>
-                                            <strong><?php echo htmlspecialchars($edu['degree']); ?></strong>
-                                        <?php endif; ?>
-                                        <?php if (!empty($edu['school'])): ?>
-                                            - <?php echo htmlspecialchars($edu['school']); ?>
-                                        <?php endif; ?>
-                                    </p>
-                                    <?php if (!empty($edu['year'])): ?>
-                                        <p class="text-gray-600"><?php echo htmlspecialchars($edu['year']); ?></p>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                    </div>
-                </section>
-            <?php endif; ?>
-            <?php if (!empty($data['skills'])): ?>
-                <section>
-                    <h2 class="border-b pb-1">Skills</h2>
-                    <ul class="mt-1 list-disc ml-4 " data-section="skills">
-                        <?php foreach ($data['skills'] as $skill): ?>
-                            <?php if (!empty($skill)): ?>
-                                <li><?php echo htmlspecialchars($skill); ?></li>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                        <?php if ($total_skills > 5): ?>
-                            <li class="text-gray-500">... and <?php echo $total_skills - 5; ?> more</li>
-                        <?php endif; ?>
-                    </ul>
-                </section>
-            <?php endif; ?>
         </div>
     </div>
     <?php if ($mode === 'view'): ?>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+            // [Your existing JavaScript from template1.php, unchanged]
             const resumeContent = document.getElementById('resumeContent');
             const fontSelect = document.getElementById('fontSelect');
             const printBtn = document.getElementById('printBtn');
@@ -415,85 +378,63 @@ $data['achievements'] = $achievements;
             });
 
             downloadBtn.addEventListener('click', function () {
-    adjustContentToFit();
-    
-    // Clone the resume content
-    const element = resumeContent.cloneNode(true);
-    
-    // Apply consistent styling for PDF
-    const fontFamily = fontSelect.value || 'Roboto';
-    element.style.fontFamily = fontFamily;
-    element.style.width = '190mm';
-    element.style.height = 'auto'; // Allow height to adjust dynamically
-    element.style.margin = '0';
-    element.style.backgroundColor = 'white';
-    element.style.padding = '5mm';
-    element.style.boxSizing = 'border-box';
-    element.style.display = 'block';
-    element.style.boxShadow = 'none';
-    element.classList.remove('shadow-lg');
+                adjustContentToFit();
+                const element = resumeContent.cloneNode(true);
+                const fontFamily = fontSelect.value || 'Times New Roman';
+                element.style.fontFamily = fontFamily;
+                element.style.width = '190mm';
+                element.style.height = 'auto';
+                element.style.margin = '0';
+                element.style.backgroundColor = 'white';
+                element.style.padding = '5mm';
+                element.style.boxSizing = 'border-box';
+                element.style.display = 'block';
+                element.style.boxShadow = 'none';
+                element.classList.remove('shadow-lg');
 
-    // Function to generate PDF
-    function generatePdf() {
-        const opt = {
-            margin: [5, 5, 5, 5], // Consistent margins for better appearance
-            filename: 'resume.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true,
-                logging: false // Disable logging for cleaner console
-            },
-            jsPDF: { 
-                unit: 'mm', 
-                format: 'a4', 
-                orientation: 'portrait' 
-            },
-            pagebreak: { 
-                mode: ['avoid-all', 'css', 'legacy'], // Respect CSS page-break rules
-                before: '.page-break-before', // Optional: Add class for manual breaks
-                after: '.page-break-after' 
-            }
-        };
+                function generatePdf() {
+                    const opt = {
+                        margin: [5, 5, 5, 5],
+                        filename: 'resume.pdf',
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true, logging: false },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                        pagebreak: { mode: ['avoid-all', 'css', 'legacy'], before: '.page-break-before', after: '.page-break-after' }
+                    };
 
-        // Generate and save PDF
-        html2pdf()
-            .set(opt)
-            .from(element)
-            .toPdf()
-            .get('pdf')
-            .then((pdf) => {
-                // Ensure content fits by allowing multiple pages
-                const totalPages = pdf.internal.getNumberOfPages();
-                for (let i = 1; i <= totalPages; i++) {
-                    pdf.setPage(i);
-                    // Optional: Add page numbers or headers if desired
-                    // pdf.text(`Page ${i} of ${totalPages}`, 10, 10);
+                    html2pdf()
+                        .set(opt)
+                        .from(element)
+                        .toPdf()
+                        .get('pdf')
+                        .then((pdf) => {
+                            const totalPages = pdf.internal.getNumberOfPages();
+                            for (let i = 1; i <= totalPages; i++) {
+                                pdf.setPage(i);
+                            }
+                        })
+                        .save();
                 }
-            })
-            .save();
-    }
 
-    // Check content height and warn if unusually large (optional)
-    const contentHeightPx = element.offsetHeight;
-    const maxHeightPxSinglePage = 277 * 3.78; // Approx height of one A4 page in pixels
-    if (contentHeightPx > maxHeightPxSinglePage * 4) { // Arbitrary limit (e.g., 4 pages)
-        Swal.fire({
-            title: 'Warning',
-            text: 'Content is unusually long and may result in many pages. Consider editing for brevity.',
-            icon: 'warning',
-            confirmButtonText: 'Proceed',
-            showCancelButton: true,
-            cancelButtonText: 'Edit Resume'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                generatePdf();
-            }
-        });
-    } else {
-        generatePdf();
-    }
-});
+                const contentHeightPx = element.offsetHeight;
+                const maxHeightPxSinglePage = 277 * 3.78;
+                if (contentHeightPx > maxHeightPxSinglePage * 4) {
+                    Swal.fire({
+                        title: 'Warning',
+                        text: 'Content is unusually long and may result in many pages. Consider editing for brevity.',
+                        icon: 'warning',
+                        confirmButtonText: 'Proceed',
+                        showCancelButton: true,
+                        cancelButtonText: 'Edit Resume'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            generatePdf();
+                        }
+                    });
+                } else {
+                    generatePdf();
+                }
+            });
 
             shareBtn.addEventListener('click', function() {
                 const shareUrl = window.location.href;
@@ -540,115 +481,108 @@ $data['achievements'] = $achievements;
             });
 
             atsCheckBtn.addEventListener('click', function() {
-    const content = resumeContent.innerText.toLowerCase();
-    let score = 0;
-    let feedback = [];
+                const content = resumeContent.innerText.toLowerCase();
+                let score = 0;
+                let feedback = [];
 
-    // 1. Keyword Relevance (30%)
-    const keywords = [
-        'software', 'developer', 'engineer', 'project', 'team', 'management', 
-        'certificate', 'achievement', 'design', 'development', 'analysis', 
-        'programming', 'leadership', 'communication', 'python', 'java', 
-        'javascript', 'sql', 'cloud', 'aws'
-    ];
-    let keywordCount = 0;
-    keywords.forEach(keyword => {
-        const regex = new RegExp(`\\b${keyword}\\b`, 'g');
-        keywordCount += (content.match(regex) || []).length;
-    });
-    const keywordScore = Math.min((keywordCount / 10) * 30, 30); // Cap at 30
-    score += keywordScore;
-    if (keywordCount < 5) {
-        feedback.push('Include more job-specific keywords (e.g., software, project, python).');
-    } else if (keywordCount > 15) {
-        feedback.push('Avoid keyword stuffing; ensure keywords are relevant.');
-    }
+                const keywords = [
+                    'software', 'developer', 'engineer', 'project', 'team', 'management', 
+                    'certificate', 'achievement', 'design', 'development', 'analysis', 
+                    'programming', 'leadership', 'communication', 'python', 'java', 
+                    'javascript', 'sql', 'cloud', 'aws'
+                ];
+                let keywordCount = 0;
+                keywords.forEach(keyword => {
+                    const regex = new RegExp(`\\b${keyword}\\b`, 'g');
+                    keywordCount += (content.match(regex) || []).length;
+                });
+                const keywordScore = Math.min((keywordCount / 10) * 30, 30);
+                score += keywordScore;
+                if (keywordCount < 5) {
+                    feedback.push('Include more job-specific keywords (e.g., software, project, python).');
+                } else if (keywordCount > 15) {
+                    feedback.push('Avoid keyword stuffing; ensure keywords are relevant.');
+                }
 
-    // 2. Section Completeness (25%)
-    const sections = ['experience', 'education', 'skills', 'projects', 'certificates'];
-    let sectionScore = 0;
-    sections.forEach(section => {
-        if (content.includes(section)) {
-            sectionScore += 5; // 5% per section
-        } else {
-            feedback.push(`Add a "${section.charAt(0).toUpperCase() + section.slice(1)}" section.`);
-        }
-    });
-    score += sectionScore;
+                const sections = ['experience', 'education', 'skills', 'projects', 'certificates'];
+                let sectionScore = 0;
+                sections.forEach(section => {
+                    if (content.includes(section)) {
+                        sectionScore += 5;
+                    } else {
+                        feedback.push(`Add a "${section.charAt(0).toUpperCase() + section.slice(1)}" section.`);
+                    }
+                });
+                score += sectionScore;
 
-    // 3. Formatting (15%)
-    let formattingScore = 15;
-    const fontFamily = window.getComputedStyle(resumeContent).fontFamily.toLowerCase();
-    const standardFonts = ['roboto', 'open sans', 'lora', 'times new roman', 'arial', 'helvetica'];
-    if (!standardFonts.some(font => fontFamily.includes(font))) {
-        formattingScore -= 5;
-        feedback.push('Use standard fonts like Roboto or Times New Roman for ATS compatibility.');
-    }
-    if (resumeContent.querySelector('table')) {
-        formattingScore -= 5;
-        feedback.push('Avoid tables; they may not parse correctly in ATS.');
-    }
-    if (content.includes('•') || content.includes('★')) {
-        formattingScore -= 5;
-        feedback.push('Minimize special characters; use simple bullets or hyphens.');
-    }
-    score += formattingScore;
+                let formattingScore = 15;
+                const fontFamily = window.getComputedStyle(resumeContent).fontFamily.toLowerCase();
+                const standardFonts = ['roboto', 'open sans', 'lora', 'times new roman', 'arial', 'helvetica'];
+                if (!standardFonts.some(font => fontFamily.includes(font))) {
+                    formattingScore -= 5;
+                    feedback.push('Use standard fonts like Roboto or Times New Roman for ATS compatibility.');
+                }
+                if (resumeContent.querySelector('table')) {
+                    formattingScore -= 5;
+                    feedback.push('Avoid tables; they may not parse correctly in ATS.');
+                }
+                if (content.includes('•') || content.includes('★')) {
+                    formattingScore -= 5;
+                    feedback.push('Minimize special characters; use simple bullets or hyphens.');
+                }
+                score += formattingScore;
 
-    // 4. Content Length (15%)
-    const words = content.split(/\s+/).filter(word => word.length > 1);
-    const wordCount = words.length;
-    let lengthScore = 0;
-    if (wordCount >= 100 && wordCount <= 600) {
-        lengthScore = 15;
-    } else if (wordCount < 100) {
-        lengthScore = 5;
-        feedback.push('Resume is too short; aim for 100–600 words.');
-    } else if (wordCount > 600 && wordCount <= 800) {
-        lengthScore = 10;
-        feedback.push('Resume is slightly long; try to keep it concise.');
-    } else {
-        lengthScore = 5;
-        feedback.push('Resume is too long; reduce to under 600 words for better ATS parsing.');
-    }
-    score += lengthScore;
+                const words = content.split(/\s+/).filter(word => word.length > 1);
+                const wordCount = words.length;
+                let lengthScore = 0;
+                if (wordCount >= 100 && wordCount <= 600) {
+                    lengthScore = 15;
+                } else if (wordCount < 100) {
+                    lengthScore = 5;
+                    feedback.push('Resume is too short; aim for 100–600 words.');
+                } else if (wordCount > 600 && wordCount <= 800) {
+                    lengthScore = 10;
+                    feedback.push('Resume is slightly long; try to keep it concise.');
+                } else {
+                    lengthScore = 5;
+                    feedback.push('Resume is too long; reduce to under 600 words for better ATS parsing.');
+                }
+                score += lengthScore;
 
-    // 5. Contact Information (10%)
-    let contactScore = 0;
-    if (content.includes('@') && content.includes('.')) { // Basic email check
-        contactScore += 5;
-    } else {
-        feedback.push('Include a valid email address.');
-    }
-    if (content.match(/\b\d{10}\b|\(\d{3}\)\s?\d{3}-\d{4}/)) { // Basic phone check
-        contactScore += 5;
-    } else {
-        feedback.push('Include a phone number.');
-    }
-    score += contactScore;
+                let contactScore = 0;
+                if (content.includes('@') && content.includes('.')) {
+                    contactScore += 5;
+                } else {
+                    feedback.push('Include a valid email address.');
+                }
+                if (content.match(/\b\d{10}\b|\(\d{3}\)\s?\d{3}-\d{4}/)) {
+                    contactScore += 5;
+                } else {
+                    feedback.push('Include a phone number.');
+                }
+                score += contactScore;
 
-    // 6. Readability (5%)
-    let readabilityScore = 5;
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const longSentences = sentences.filter(s => s.split(/\s+/).length > 25).length;
-    if (longSentences / sentences.length > 0.2) {
-        readabilityScore -= 3;
-        feedback.push('Shorten sentences for better readability (most under 25 words).');
-    }
-    score += readabilityScore;
+                let readabilityScore = 5;
+                const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+                const longSentences = sentences.filter(s => s.split(/\s+/).length > 25).length;
+                if (longSentences / sentences.length > 0.2) {
+                    readabilityScore -= 3;
+                    feedback.push('Shorten sentences for better readability (most under 25 words).');
+                }
+                score += readabilityScore;
 
-    // Round score to nearest integer
-    score = Math.round(score);
+                score = Math.round(score);
 
-    Swal.fire({
-        title: `ATS Score: ${score}%`,
-        html: feedback.length > 0 ? 
-            `<p><strong>Feedback:</strong></p><ul class="list-disc pl-5">${feedback.map(f => `<li>${f}</li>`).join('')}</ul>` : 
-            '<p>Your resume is highly ATS-compatible!</p>',
-        icon: score >= 85 ? 'success' : score >= 60 ? 'warning' : 'error',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#3085d6'
-    });
-});
+                Swal.fire({
+                    title: `ATS Score: ${score}%`,
+                    html: feedback.length > 0 ? 
+                        `<p><strong>Feedback:</strong></p><ul class="list-disc pl-5">${feedback.map(f => `<li>${f}</li>`).join('')}</ul>` : 
+                        '<p>Your resume is highly ATS-compatible!</p>',
+                    icon: score >= 85 ? 'success' : score >= 60 ? 'warning' : 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
+            });
         </script>
     <?php endif; ?>
 </body>
